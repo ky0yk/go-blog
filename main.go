@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -31,12 +32,14 @@ func main() {
 	Message: "test comment1",
 	CreatedAt: time.Now(),
 	}
+
 	comment2 := Comment{
 	CommentID: 2,
 	ArticleID: 1,
 	Message: "second comment",
 	CreatedAt: time.Now(),
 	}
+
 	article := Article{
 	ID: 1,
 	Title: "first article",
@@ -46,7 +49,14 @@ func main() {
 	CommentList: []Comment{comment1, comment2},
 	CreatedAt: time.Now(),
 	}
-	fmt.Printf("%+v\n", article)
+
+	jsonData, err := json.Marshal(article)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("%s\n", jsonData)
 }
 
 

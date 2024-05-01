@@ -17,7 +17,6 @@ func HelloHandler (w http.ResponseWriter, req *http.Request){
 }
 
 func PostArticleHandler (w http.ResponseWriter, req *http.Request){
-	article := models.Article1
 
 	// 1. バイトスライス reqBodybuffer を何らかの形で用意
 	length, err := strconv.Atoi(req.Header.Get("Content-Length"))
@@ -35,6 +34,13 @@ func PostArticleHandler (w http.ResponseWriter, req *http.Request){
 	// 3. ボディを Close する
 	defer req.Body.Close()
 
+	var reqArticle models.Article
+	if err := json.Unmarshal(reqBodyBuffer, &reqArticle); err != nil {
+		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
+		return
+	}
+
+	article := reqArticle
 	jsonData, err := json.Marshal(article)
 	if err != nil {
 		http.Error(w, "fail to encode json\n", http.StatusInternalServerError)

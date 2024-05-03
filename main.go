@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/ky0yk/go-blog/models"
 )
 
 func main() {
@@ -20,56 +19,49 @@ func main() {
 	}
 	defer db.Close()
 
-	article := models.Article{
-		Title: "insert test",
-		Contents: "Can I insert dat acorrectly?",
-		UserName: "saki",
-	}
-	const sqlStr = `
-		insert into articles (title, contents, username, nice, created_at) values
-		(?, ?, ?, 0, now());
-	`
-	result, err := db.Exec(sqlStr, article.Title, article.Contents, article.UserName)
+	// トランザクションの開始
+	tx, err := db.Begin()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(result.LastInsertId())
-	fmt.Println(result.RowsAffected())
+	// 現在のいいね数を取得するクエリを実行する
+	article_id := 1
+	const sqlGetNice = `
+		select nice
+		from articles
+		where article_id = ?;
+	`
 
+	row := tx.QueryRow(sqlGetNice, article_id)
+	if err := row.Err(); err != nil {
+		fmt.Println(err)
+		tx.Rollback()
+		return
+	}
 
-	// articleID := 1
-	// const sqlStr = `
-	// 	select *
-	// 	from articles
-	// 	where article_id = ?;
-	// `
+	// 変数 nicenum に現在のいいね数を読み込む
+	var nicenum int
+	err = row.Scan(&nicenum)
+	if err != nil {
+		fmt.Println(err)
+		tx.Rollback()
+		return
+	}
 
-	// row := db.QueryRow(sqlStr, articleID)
-	// if err := row.Err(); err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	// いいね数を+1 する更新処理を行う
+	const sqlUpdateNice = `update articles set nice = ? where article_id = ?`
+	_, err = tx.Exec(sqlUpdateNice, nicenum + 1, article_id)
+	if err != nil {
+		fmt.Println(err)
+		tx.Rollback()
+		return
+	}
 
-	// var article models.Article
-	// var createdTime sql.NullTime
+	// コミットして処理内容を確定させる
+	tx.Commit()
 
-	// err = row.Scan(&article.ID, &article.Title, &article.Contents, &article.UserName, &article.NiceNum, &createdTime)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// if createdTime.Valid {
-	// 	article.CreatedAt = createdTime.Time
-	// }
-
-
-	// fmt.Printf("%+v\n", article)
-
-	
 	// r := mux.NewRouter()
 
 	// r.HandleFunc("/hello", handlers.HelloHandler).Methods((http.MethodGet))

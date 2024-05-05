@@ -13,7 +13,9 @@ func InsertComment(db *sql.DB, comment models.Comment) (models.Comment, error) {
 	`
 
 	var newComment models.Comment
-	result, err := db.Exec(sqlStr, comment.ArticleID, comment.Message, comment.CreatedAt)
+	newComment.ArticleID, newComment.Message = comment.ArticleID, comment.Message
+
+	result, err := db.Exec(sqlStr, comment.ArticleID, comment.Message)
 	if err != nil {
 		return models.Comment{}, err
 	}
@@ -41,7 +43,7 @@ func SelectCommentList(db *sql.DB, articleID int) ([]models.Comment, error) {
 	for rows.Next(){
 		var comment models.Comment
 		var createdTime sql.NullTime
-		rows.Scan(&comment.ArticleID, &comment.CommentID, &comment.Message, &createdTime)
+		rows.Scan(&comment.CommentID, &comment.ArticleID,  &comment.Message, &createdTime)
 
 		if createdTime.Valid {
 			comment.CreatedAt = createdTime.Time

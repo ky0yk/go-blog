@@ -1,78 +1,25 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
+	"log"
+	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
+	"github.com/ky0yk/go-blog/handlers"
 )
 
 func main() {
-	dbUser := "docker"
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
-	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+	r := mux.NewRouter()
 
-	db, err := sql.Open("mysql", dbConn)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
+	r.HandleFunc("/hello", handlers.HelloHandler).Methods(http.MethodGet)
 
-	// トランザクションの開始
-	tx, err := db.Begin()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	r.HandleFunc("/article", handlers.PostArticleHandler).Methods(http.MethodPost)
+	r.HandleFunc("/article/list", handlers.ArticleListHandler).Methods(http.MethodGet)
+	r.HandleFunc("/article/{id:[0-9]+}", handlers.ArticleDetailHandler).Methods(http.MethodGet)
+	r.HandleFunc("/article/nice", handlers.PostNiceHandler).Methods(http.MethodPost)
 
-	// 現在のいいね数を取得するクエリを実行する
-	article_id := 1
-	const sqlGetNice = `
-		select nice
-		from articles
-		where article_id = ?;
-	`
+	r.HandleFunc("/comment", handlers.PostCommentHandler).Methods(http.MethodPost)
 
-	row := tx.QueryRow(sqlGetNice, article_id)
-	if err := row.Err(); err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	// 変数 nicenum に現在のいいね数を読み込む
-	var nicenum int
-	err = row.Scan(&nicenum)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	// いいね数を+1 する更新処理を行う
-	const sqlUpdateNice = `update articles set nice = ? where article_id = ?`
-	_, err = tx.Exec(sqlUpdateNice, nicenum + 1, article_id)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	// コミットして処理内容を確定させる
-	tx.Commit()
-
-	// r := mux.NewRouter()
-
-	// r.HandleFunc("/hello", handlers.HelloHandler).Methods((http.MethodGet))
-
-	// r.HandleFunc("/article", handlers.PostArticleHandler).Methods((http.MethodPost))
-	// r.HandleFunc("/article/list", handlers.ArticListleHandler).Methods(http.MethodGet)
-	// r.HandleFunc("/article/{id:[0-9]+}", handlers.ArticleDetailHandler).Methods(http.MethodGet)
-	// r.HandleFunc("/article/nice", handlers.PostNiceHandler).Methods(http.MethodPost)
-
-	// r.HandleFunc("/comment", handlers.PostCommentHandler).Methods(http.MethodPost)
-
-	// log.Println("server start at port 8080")
-	// log.Fatal(http.ListenAndServe(":8080", r))
+	log.Println("server start at port 8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

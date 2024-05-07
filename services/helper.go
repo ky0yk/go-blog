@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-)
 
-var testDB *sql.DB
+	_ "github.com/go-sql-driver/mysql"
+)
 
 var (
 	dbUser     = os.Getenv("DB_USER")
@@ -16,7 +16,6 @@ var (
 )
 
 func connectDB() (*sql.DB, error) {
-	var err error
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
 		return nil, err

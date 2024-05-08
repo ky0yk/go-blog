@@ -1,6 +1,6 @@
 package apperrors
 
-type MyAppError struc {
+type MyAppError struct {
 	ErrCode
 	Message string
 	Err error

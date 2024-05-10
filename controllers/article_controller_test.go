@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-func TestArticleListHander(t *testing.T){
+func TestArticleListHandler(t *testing.T) {
 	var tests = []struct {
-		name string
-		query string
+		name       string
+		query      string
 		resultCode int
 	}{
 		{name: "number query", query: "1", resultCode: http.StatusOK},

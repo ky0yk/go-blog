@@ -28,7 +28,7 @@ func (c *CommentController) PostCommentHandler(w http.ResponseWriter, req *http.
 
 	comment, err := c.services.PostCommentService(reqComment)
 	if err != nil {
-		http.Error(w, "fail internal exec\n", http.StatusInternalServerError)
+		apperrors.ErrorHandler(w, req, err)
 		return
 	}
 	json.NewEncoder(w).Encode(comment)
